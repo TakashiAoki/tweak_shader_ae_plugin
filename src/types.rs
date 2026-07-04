@@ -399,12 +399,23 @@ impl Local {
         let Ok(raw) = std::fs::read_to_string(&sidecar) else {
             return None;
         };
+        let result_file = std::env::temp_dir().join("starfield_load_result.txt");
         let path = PathBuf::from(raw.trim());
         if !path.exists() {
+            let _ = std::fs::write(&result_file, format!("ERR no such file: {}", path.display()));
             return None;
         }
+        let shown = path.display().to_string();
         self.src_path = Some(path);
-        self.reload_last_path(global)
+        let result = self.reload_last_path(global);
+        let _ = std::fs::write(
+            &result_file,
+            match &result {
+                None => format!("OK {}", shown),
+                Some(e) => format!("ERR {}", e),
+            },
+        );
+        result
     }
 
     pub fn reload_last_path(&mut self, global: &TweakShaderGlobal) -> Option<String> {
