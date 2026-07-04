@@ -7,7 +7,10 @@ use after_effects::{Error, InData};
 use after_effects_sys::PF_Pixel;
 use tweak_shader::input_type::InputType;
 
-pub const MAX_INPUTS: i32 = 32;
+// 31, not 32: ParamIdx::Dynamic is u8, and with 8 param types the last
+// dynamic index is MAX_INPUTS*8 + 6 — at 32 inputs that overflows u8 and
+// wraps into the static param range (param_index out of range on apply).
+pub const MAX_INPUTS: i32 = 31;
 pub const PARAM_TYPE_COUNT: i32 = 8;
 pub const STATIC_PARAMS_OFFSET: i32 = ParamIdx::UseLayerTime.idx() + 1;
 pub const PARAM_COUNT: i32 = (PARAM_TYPE_COUNT * MAX_INPUTS) + STATIC_PARAMS_OFFSET;
