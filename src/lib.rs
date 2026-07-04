@@ -79,6 +79,14 @@ impl AdobePluginInstance for LocalMutex {
                 param_util::update_param_ui(plugin, &mut lock!(self))?;
             }
             Command::UserChangedParam { param_index } => {
+                // Sidecar autoload fallback: lets scripts trigger a load on an
+                // already-applied empty instance by touching any param.
+                if lock!(self).src.is_none() {
+                    lock!(self).try_sidecar_autoload(plugin.global);
+                    if lock!(self).src.is_some() {
+                        param_util::update_param_defaults_and_labels(plugin, &mut lock!(self))?;
+                    }
+                }
                 match ParamIdx::from(param_index as u8) {
                     ParamIdx::UnloadButton => {
                         lock!(self).unload_scene();
@@ -215,6 +223,7 @@ impl AdobePluginInstance for LocalMutex {
                 if let Some(global) = plugin.global.as_init() {
                     lock!(self).init_or_update(&global.device, &global.queue, BitDepth::U8);
                 }
+                lock!(self).try_sidecar_autoload(plugin.global);
             }
             Command::SequenceResetup => {
                 if let Some(global) = plugin.global.as_init() {

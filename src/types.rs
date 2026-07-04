@@ -386,6 +386,27 @@ impl Local {
         self.local_init = None;
     }
 
+    /// Scriptable alternative to the load-button file dialog: if no shader is
+    /// loaded and %TEMP%/starfield_load_request.txt exists, treat its (trimmed)
+    /// contents as a shader path and load it. The requesting script owns the
+    /// sidecar file's lifetime — the plugin never deletes it, so scripts must
+    /// remove or overwrite it between effect applications.
+    pub fn try_sidecar_autoload(&mut self, global: &TweakShaderGlobal) -> Option<String> {
+        if self.src.is_some() {
+            return None;
+        }
+        let sidecar = std::env::temp_dir().join("starfield_load_request.txt");
+        let Ok(raw) = std::fs::read_to_string(&sidecar) else {
+            return None;
+        };
+        let path = PathBuf::from(raw.trim());
+        if !path.exists() {
+            return None;
+        }
+        self.src_path = Some(path);
+        self.reload_last_path(global)
+    }
+
     pub fn reload_last_path(&mut self, global: &TweakShaderGlobal) -> Option<String> {
         let InnerGlobal { queue, device, .. } = global.as_init()?;
 
