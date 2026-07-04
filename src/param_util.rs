@@ -8,7 +8,7 @@ use after_effects_sys::PF_Pixel;
 use tweak_shader::input_type::InputType;
 
 pub const MAX_INPUTS: i32 = 32;
-pub const PARAM_TYPE_COUNT: i32 = 7;
+pub const PARAM_TYPE_COUNT: i32 = 8;
 pub const STATIC_PARAMS_OFFSET: i32 = ParamIdx::UseLayerTime.idx() + 1;
 pub const PARAM_COUNT: i32 = (PARAM_TYPE_COUNT * MAX_INPUTS) + STATIC_PARAMS_OFFSET;
 
@@ -20,6 +20,7 @@ pub enum Variant {
     Bool,
     Color,
     Image,
+    Point3D,
 }
 
 pub fn index_from_mut(index: usize, variant: &mut tweak_shader::input_type::MutInput) -> ParamIdx {
@@ -32,6 +33,7 @@ pub fn index_from_mut(index: usize, variant: &mut tweak_shader::input_type::MutI
         }
         tweak_shader::input_type::InputVariant::Int => Variant::IntList as _,
         tweak_shader::input_type::InputVariant::Point => Variant::Point as _,
+        tweak_shader::input_type::InputVariant::Point3 => Variant::Point3D as _,
         tweak_shader::input_type::InputVariant::Bool => Variant::Bool as _,
         tweak_shader::input_type::InputVariant::Color => Variant::Color as _,
         tweak_shader::input_type::InputVariant::Image => Variant::Image as _,
@@ -47,6 +49,7 @@ pub fn as_param_index(index: usize, variant: &tweak_shader::input_type::InputTyp
         tweak_shader::input_type::InputType::Int(_, None) => Variant::Int as _,
         tweak_shader::input_type::InputType::Int(_, Some(_)) => Variant::IntList as _,
         tweak_shader::input_type::InputType::Point(_) => Variant::Point as _,
+        tweak_shader::input_type::InputType::Point3(_) => Variant::Point3D as _,
         tweak_shader::input_type::InputType::Bool(_) => Variant::Bool as _,
         tweak_shader::input_type::InputType::Color(_) => Variant::Color as _,
         tweak_shader::input_type::InputType::Image(_) => Variant::Image as _,
@@ -131,6 +134,12 @@ pub fn update_param_defaults_and_labels(
                 if let InputType::Point(pt) = var {
                     p.set_default(pt.default.into());
                     p.set_value(pt.current.into());
+                }
+            }
+            ae::Param::Point3D(mut p) => {
+                if let InputType::Point3(pt) = var {
+                    p.set_default((pt.default[0] as f64, pt.default[1] as f64, pt.default[2] as f64));
+                    p.set_value((pt.current[0] as f64, pt.current[1] as f64, pt.current[2] as f64));
                 }
             }
             ae::Param::Popup(mut il) => {
@@ -358,6 +367,13 @@ pub fn create_variant_backing(params: &mut ae::Parameters<ParamIdx>) -> Result<(
                     param_flag,
                     ui_flags,
                 )?,
+                p3 if p3 == Variant::Point3D as usize => params.add_with_flags(
+                    index,
+                    &name,
+                    ae::Point3DDef::setup(point3),
+                    param_flag,
+                    ui_flags,
+                )?,
                 _ => {}
             }
         }
@@ -405,6 +421,10 @@ fn color(f: &mut ae::ColorDef) {
 
 fn point(f: &mut ae::PointDef) {
     f.set_default((0.0, 0.0));
+}
+
+fn point3(f: &mut ae::Point3DDef) {
+    f.set_default((0.0, 0.0, 0.0));
 }
 
 fn bool(f: &mut ae::CheckBoxDef) {

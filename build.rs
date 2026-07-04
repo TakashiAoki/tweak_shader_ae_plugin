@@ -6,7 +6,7 @@ const PF_PLUG_IN_SUBVERS: u16 = 28;
 fn main() {
     pipl::plugin_build(vec![
         Property::Kind(PIPLType::AEEffect),
-        Property::Name("TweakShader"),
+        Property::Name("StarField"),
         Property::Category("Shaders"),
         #[cfg(target_os = "windows")]
         Property::CodeWin64X86("EffectMain"),
@@ -41,7 +41,7 @@ fn main() {
                 | OutFlags2::SupportsGetFlattenedSequenceData
                 | OutFlags2::ParamGroupStartCollapsedFlag,
         ),
-        Property::AE_Effect_Match_Name("TweakShader"),
+        Property::AE_Effect_Match_Name("StarField"),
         Property::AE_Reserved_Info(0),
         Property::AE_Effect_Support_URL("github/mobile-bungalow"),
     ])

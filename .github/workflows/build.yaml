@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   build_mac:
+    if: false  # フォークでは署名シークレット未設定のため無効化 (Mac版は後日)
     runs-on: macos-latest
     environment: build # macos build env
     steps:
@@ -63,5 +64,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: win-build
-          path: target/release/TweakShader.aex
+          path: target/release/StarField.aex
           if-no-files-found: error

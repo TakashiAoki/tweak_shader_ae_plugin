@@ -1,4 +1,4 @@
-PluginName       := "TweakShader"
+PluginName       := "StarField"
 BundleIdentifier := "com.adobe.AfterEffects.{{PluginName}}"
 BinaryName       := lowercase(PluginName)
 CrateName        := "tweak_shader_ae_rs"

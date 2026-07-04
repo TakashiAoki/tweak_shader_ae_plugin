@@ -168,6 +168,12 @@ pub fn load_parameters(
                     point.current = pt.value().into();
                 }
             }
+            Param::Point3D(pt) => {
+                if let Some(point) = input.as_point3() {
+                    let v = pt.value();
+                    point.current = [v.0 as f32, v.1 as f32, v.2 as f32];
+                }
+            }
             Param::Popup(int) => {
                 if let Some(ount) = input.as_int() {
                     if let Some(entry) = ount
