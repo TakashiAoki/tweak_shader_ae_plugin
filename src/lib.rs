@@ -80,12 +80,10 @@ impl AdobePluginInstance for LocalMutex {
             }
             Command::UserChangedParam { param_index } => {
                 // Sidecar autoload fallback: lets scripts trigger a load on an
-                // already-applied empty instance by touching any param.
+                // already-applied empty instance by touching any param. Param
+                // labels refresh later via needs_param_setup / UpdateParamsUi.
                 if lock!(self).src.is_none() {
                     lock!(self).try_sidecar_autoload(plugin.global);
-                    if lock!(self).src.is_some() {
-                        param_util::update_param_defaults_and_labels(plugin, &mut lock!(self))?;
-                    }
                 }
                 match ParamIdx::from(param_index as u8) {
                     ParamIdx::UnloadButton => {
