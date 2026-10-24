@@ -106,8 +106,13 @@ impl U16ConversionContext {
     where
         I: Iterator<Item = (&'a str, ae::Layer)>,
     {
-        let mut render_encoder = device.create_command_encoder(&Default::default());
+        // StarField v0.1.4: one encoder + submit per layer. u16_to_fp_ctx reuses its
+        // "input_image" texture when the size matches, and queue.write_texture runs
+        // before any later submit - so with a single submit at the end, every staging
+        // texture was converted from the LAST layer's pixels (two same-sized image
+        // inputs in a 16bpc project: the star map arrived as the milky way map).
         for (name, layer) in layers {
+            let mut render_encoder = device.create_command_encoder(&Default::default());
             let width = layer.width() as u32;
             let height = layer.height() as u32;
 
@@ -148,8 +153,8 @@ impl U16ConversionContext {
                 width,
                 height,
             );
+            queue.submit([render_encoder.finish()]);
         }
-        queue.submit([render_encoder.finish()]);
     }
 }
 
