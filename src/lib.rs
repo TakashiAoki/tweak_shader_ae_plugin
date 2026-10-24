@@ -15,6 +15,8 @@ use types::*;
 const SERDE_ID_V1: u16 = 1;
 const SERDE_ID: u16 = 2;
 const INPUT_LAYER_CHECKOUT_ID: ParamIdx = ParamIdx::Dynamic(240);
+// checkout ids for the size probe of image inputs (param index + offset; never used for pixels)
+const IMAGE_PROBE_CHECKOUT_OFFSET: i32 = 1000;
 static PLUGIN_ID: std::sync::OnceLock<i32> = std::sync::OnceLock::new();
 
 ae::define_effect!(TweakShaderGlobal, LocalMutex, ParamIdx);
@@ -173,10 +175,27 @@ impl AdobePluginInstance for LocalMutex {
                         {
                             let id_and_index = param_util::as_param_index(index, v).idx();
 
+                            // StarField v0.1.4: image inputs are checked out in full.
+                            // Using the output request rect (req.rect) crops the source layer
+                            // to the effect's output size (e.g. an 8192x4096 sky map arrived as
+                            // 256x64 in a 256x64 comp). Probe once for the layer's
+                            // max_result_rect, then check out that whole rect.
+                            let mut full_req = req;
+                            if let Ok(probe) = cb.checkout_layer(
+                                id_and_index,
+                                id_and_index + IMAGE_PROBE_CHECKOUT_OFFSET,
+                                &req,
+                                current_time,
+                                time_step,
+                                time_scale,
+                            ) {
+                                full_req.rect = probe.max_result_rect;
+                            }
+
                             cb.checkout_layer(
                                 id_and_index,
                                 id_and_index,
-                                &req,
+                                &full_req,
                                 current_time,
                                 time_step,
                                 time_scale,
